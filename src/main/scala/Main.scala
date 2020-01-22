@@ -1,20 +1,43 @@
 import GeneralActor.{Register, Timeout}
-import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import akka.actor.{Actor, ActorRef, ActorSelection, ActorSystem, Props}
 import akka.event.{Logging, LoggingAdapter}
-import scala.collection.mutable
+import com.typesafe.config._
 
-object Main extends App {
+object Remote extends App {
 
   implicit val system: ActorSystem = ActorSystem()
-  val log: LoggingAdapter = Logging(system.eventStream, "timer-actor")
+  val log: LoggingAdapter = Logging(system.eventStream, "remote-manager")
 
-  val generalActor = system.actorOf(Props[GeneralActor])
+  val manager = system.actorOf(Props[Manager])
+}
+
+object RemoteActorRefProvider {
+  def remotingConfig(port: Int): Config = ConfigFactory.parseString(
+    s"""
+       akka {
+       actor.provider = "akka.remote.RemoteActorRefProvider"
+       remote {
+        enabled-transports = ["akka.remote.netty.tcp"]
+        netty.tcp {
+          hostname = "192.168.2.175"
+          port = $port
+         }
+        }
+       }
+       """)
+
+  def remotingSystem(name: String, port: Int): ActorSystem = ActorSystem(name, remotingConfig(port))
+}
+object Local extends App {
+  implicit val system: ActorSystem = ActorSystem()
+  val generalActor: ActorRef = system.actorOf(Props[GeneralActor])
+  val log: LoggingAdapter = Logging(system.eventStream, "local-GA")
 
   val k = 200
-  for (t <- 1 to 4) {
-    generalActor ! Register(t * k)
-    log.info("Sent " + t * k)
-  }
+//  for (t <- 1 to 4) {
+    generalActor ! Register(5 * k)
+    log.info("Sent " + 5 * k)
+//  }
 }
 
 object GeneralActor {
@@ -24,12 +47,16 @@ object GeneralActor {
 
 class GeneralActor extends Actor {
 
+  val remoteSystem: ActorSystem = RemoteActorRefProvider.remotingSystem("Manager", 20000)
   val log: LoggingAdapter = Logging(context.system, this)
-  val manager: ActorRef = context.actorOf(Props[Manager])
-
+//  val manager: ActorRef = remoteSystem.actorOf(Props[Manager])
+  val managerSystem = "akka.tcp://Manager@192.168.2.175:20000"
+  val managerPath = "/user/Manager"
+  val url: String = managerSystem + managerPath
+  val selection: ActorSelection = context.actorSelection(url)
   override def receive: Receive = {
     case Register(t) =>
-      manager ! Register(t)
+      selection ! Register(t)
     case Timeout(t) => log.info(s"Timeout $t elapsed")
   }
 }
@@ -57,7 +84,6 @@ class TimerActor extends Actor {
 
 class Manager extends Actor {
   val log: LoggingAdapter = Logging(context.system, this)
-//  val actors:
 
   override def receive: Receive = {
     case Register(t) =>
