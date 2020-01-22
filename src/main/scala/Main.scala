@@ -9,9 +9,10 @@ object Main extends App {
 
   val generalActor = system.actorOf(Props[GeneralActor])
 
-  for (t <- 1 to 10) {
-    generalActor ! Register(t * 200)
-    log.info("Sent " + t * 200)
+  val k = 200
+  for (t <- 1 to 4) {
+    generalActor ! Register(t * k)
+    log.info("Sent " + t * k)
   }
 }
 
@@ -23,11 +24,11 @@ object GeneralActor {
 class GeneralActor extends Actor {
 
   val log: LoggingAdapter = Logging(context.system, this)
-  val timeActor: ActorRef = context.actorOf(Props[TimerActor])
+  val manager: ActorRef = context.actorOf(Props[Manager])
 
   override def receive: Receive = {
     case Register(t) =>
-      timeActor ! t
+      manager ! Register(t)
     case Timeout(t) => log.info(s"Timeout $t elapsed")
   }
 }
@@ -40,5 +41,25 @@ class TimerActor extends Actor {
       log.info(s"Got timeout: $int")
       Thread.sleep(int)
       sender() ! Timeout(int)
+      context.stop(self)
+  }
+
+  override def preStart(): Unit = {
+    super.preStart()
+    log.info("PRESTART: Actor " + self.path.name + " created.")
+  }
+
+  override def postStop(): Unit = {
+    log.info("POSTSTOP: " + self.path.name + " died.")
+  }
+}
+
+class Manager extends Actor {
+  val log: LoggingAdapter = Logging(context.system, this)
+//  val actors:
+
+  override def receive: Receive = {
+    case Register(t) =>
+      context.actorOf(Props[TimerActor], s"$t").forward(t)
   }
 }
