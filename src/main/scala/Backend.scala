@@ -1,18 +1,8 @@
-import RemoteActorRefProvider.conf
 import akka.actor.{ActorSystem, Props}
 import akka.event.{Logging, LoggingAdapter}
 import com.typesafe.config._
 
 object Backend extends App {
-  val config: Config = ConfigFactory.parseString(conf)
-  val backend: ActorSystem = ActorSystem("backend", config)
-  val log: LoggingAdapter = Logging(backend.eventStream, "backend-manager")
-
-  val manager = backend.actorOf(Props[Manager], "manager")
-}
-
-object RemoteActorRefProvider {
-
   val conf: String =
     """
        akka {
@@ -26,4 +16,8 @@ object RemoteActorRefProvider {
         }
        }
        """
+  val config: Config = ConfigFactory.parseString(conf)
+  val backend: ActorSystem = ActorSystem("backend", config)
+  val log: LoggingAdapter = Logging(backend.eventStream, "backend-manager")
+  val manager = backend.actorOf(Props[Manager], "manager")
 }
