@@ -27,11 +27,3 @@ object RemoteActorRefProvider {
        }
        """
 }
-
-object GeneralActor {
-
-  case class Register(t: Int)
-
-  case class Timeout(t: Int)
-
-}
