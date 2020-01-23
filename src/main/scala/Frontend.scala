@@ -7,18 +7,20 @@ object Frontend extends App {
   val conf =
     """
 akka {
-  actor.provider = "akka.remote.RemoteActorRefProvider"
+  actor {
+    provider = cluster
+  }
   remote {
-    enabled-transports = ["akka.remote.netty.tcp"]
-    netty.tcp {
-      hostname = "0.0.0.0"
-      port = 2551
+    artery {
+      transport = tcp
+      canonical.hostname = "0.0.0.0"
+      canonical.port = 2552
     }
   }
 }
   """
 
-  val config: Config = ConfigFactory.parseString(conf)
+  val config: Config = ConfigFactory.parseString(conf).withFallback(ConfigFactory.load())
   val frontend: ActorSystem = ActorSystem("frontend", config)
   val generalActor: ActorRef = frontend.actorOf(Props[GeneralActor], "generalActor")
   val log: LoggingAdapter = Logging(frontend.eventStream, "frontend-GA")
