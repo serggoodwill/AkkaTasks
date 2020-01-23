@@ -6,17 +6,19 @@ object Backend extends App {
   val conf: String =
     """
        akka {
-       actor.provider = "akka.remote.RemoteActorRefProvider"
-       remote {
-        enabled-transports = ["akka.remote.netty.tcp"]
-        netty.tcp {
-          hostname = "0.0.0.0"
-          port = 2552
-         }
-        }
-       }
+  actor {
+    provider = cluster
+  }
+  remote {
+    artery {
+      transport = tcp
+      canonical.hostname = "0.0.0.0"
+      canonical.port = 2552
+    }
+  }
+}
        """
-  val config: Config = ConfigFactory.parseString(conf)
+  val config: Config = ConfigFactory.parseString(conf).withFallback(ConfigFactory.load());
   val backend: ActorSystem = ActorSystem("backend", config)
   val log: LoggingAdapter = Logging(backend.eventStream, "backend-manager")
   val manager = backend.actorOf(Props[Manager], "manager")
