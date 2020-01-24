@@ -2,23 +2,29 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.{Logging, LoggingAdapter}
 import com.typesafe.config._
 
+/**
+ *  Required scala ver 2.11.8
+ *           akka ver 2.4.9
+ */
 object Frontend extends App {
-  val conf =
-    """
+  def remotingConfig() = ConfigFactory.parseString(
+    s"""
 akka {
 actor.provider = "akka.remote.RemoteActorRefProvider"
 remote {
 enabled-transports = ["akka.remote.netty.tcp"]
 netty.tcp {
 hostname = "192.168.2.199"
-port = 2552
+port = 2522
 }
 }
 }
-  """
+""")
 
-  val config: Config = ConfigFactory.parseString(conf)
-  val frontend: ActorSystem = ActorSystem("frontend", config)
+  def remotingSystem(name: String): ActorSystem =
+    ActorSystem(name, remotingConfig())
+
+  val frontend: ActorSystem = remotingSystem("frontend")
   val generalActor: ActorRef = frontend.actorOf(Props[GeneralActor], "generalActor")
   val log: LoggingAdapter = Logging(frontend.eventStream, "frontend-GA")
   val k = 200
