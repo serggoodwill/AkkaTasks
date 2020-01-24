@@ -16,7 +16,7 @@ class GeneralActor extends Actor {
 
   override def receive: Receive = {
     case s: String =>
-      val selection: ActorSelection = context.actorSelection("akka.tcp://backend@192.168.2.175:2552/user/manager")
+      val selection: ActorSelection = context.actorSelection("akka.tcp://backend@192.168.2.175:2552/user/*")
       selection ! Identify(0)
     case ActorIdentity(0, Some(ref)) =>
       log.info(ref.toString() + " got")
