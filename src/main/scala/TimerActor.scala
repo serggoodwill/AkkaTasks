@@ -1,3 +1,4 @@
+import GeneralActor.Timeout
 import akka.actor.Actor
 import akka.event.{Logging, LoggingAdapter}
 
@@ -8,7 +9,7 @@ class TimerActor extends Actor {
     case int: Int =>
       log.info(s"Got timeout: $int")
       Thread.sleep(int)
-      //      sender() ! Timeout(int)
+      sender() ! Timeout(int, self)
       context.stop(self)
   }
 

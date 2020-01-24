@@ -1,12 +1,12 @@
 import GeneralActor.Timeout
-import akka.actor.{Actor, ActorIdentity, ActorSelection, Identify}
+import akka.actor.{Actor, ActorIdentity, ActorRef, ActorSelection, Identify}
 import akka.event.{Logging, LoggingAdapter}
 
 object GeneralActor {
 
   case class Register(t: Int)
 
-  case class Timeout(t: Int)
+  case class Timeout(t: Int, ref: ActorRef)
 
 }
 
@@ -24,6 +24,6 @@ class GeneralActor extends Actor {
       log.info("Something’s wrong - ain’t no actor anywhere!")
     //    case Register(t) =>
     //      ref ! Register(t)
-    case Timeout(t) => log.info(s"Timeout $t elapsed")
+    case Timeout(t, ref) => log.info(s"$ref got timeout $t")
   }
 }
