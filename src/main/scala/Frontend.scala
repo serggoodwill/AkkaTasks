@@ -1,3 +1,4 @@
+import GeneralActor.Register
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.{Logging, LoggingAdapter}
 import com.typesafe.config._
@@ -30,7 +31,9 @@ port = 2522
   val k = 200
   //  for (t <- 1 to 4) {
   generalActor ! "Start"
-  //  generalActor ! Register(5 * k)
-  //  log.info("Sent " + 5 * k)
+  Thread.sleep(1000)
+    generalActor ! Register(5 * k)
+    log.info("Sent " + 5 * k)
+  generalActor ! "Start"
   //  }
 }
