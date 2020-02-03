@@ -5,8 +5,8 @@ import java.nio.file.StandardOpenOption._
 
 import akka.NotUsed
 import akka.actor.ActorSystem
-import akka.stream.scaladsl.{FileIO, Flow, Framing, RunnableGraph, Sink, Source}
-import akka.stream.{ActorMaterializer, ActorMaterializerSettings, IOResult}
+import akka.stream.scaladsl.{FileIO, Flow, Framing, Keep, RunnableGraph, Sink, Source}
+import akka.stream.{ActorMaterializer, IOResult}
 import akka.util.ByteString
 import com.typesafe.config.ConfigFactory
 
@@ -40,8 +40,6 @@ object StreamingCopy extends App {
       .map(_.decodeString("UTF8"))
       .map(s => ByteString(s + "*"))
 
-  val runnableGraph: RunnableGraph[Future[IOResult]] = source.via(flow).to(sink)
-
   val conf: String =
     s"""
 akka {
@@ -57,14 +55,31 @@ port = 2552
 """
 
   val config = ConfigFactory.parseString(conf)
-  implicit val frontend: ActorSystem = ActorSystem("frontend", config)
+  implicit val frontend: ActorSystem = ActorSystem()
   implicit val ec: ExecutionContextExecutor = frontend.dispatcher
   implicit val materializer: ActorMaterializer = ActorMaterializer()
 
-  runnableGraph.run().foreach {
-    result =>
-      println(s"${result.status}, ${result.count} bytes read.")
-      frontend.terminate()
-  }
-
+  //  ----------------------------  Keep.left
+  //  val runnableGraph: RunnableGraph[Future[IOResult]] = source.via(flow).to(sink)
+  //  runnableGraph.run().foreach {
+  //    result =>
+  //      println(s"${result.status}, ${result.count} bytes read.")
+  //      frontend.terminate()
+  //  }
+  //  ----------------------------  Keep.right
+  //    val runnableGraph: RunnableGraph[Future[IOResult]]= source.via(flow).toMat(sink)(Keep.right)
+  //      runnableGraph.run().foreach{
+  //        r => println(s"${r.status} ,  ${r.count} bytes.")
+  //          actorSystem.terminate()
+  //      }
+  val runnableGraph: RunnableGraph[(Future[IOResult], Future[IOResult])] = source.via(flow).toMat(sink)(Keep.both)
+  val (sourceFuture, sinkFuture) = runnableGraph.run()
+  sinkFuture.foreach(s => {
+    println(s"Sink ${s.status}   ${s.count} bytes")
+    if (sourceFuture.isCompleted) frontend.terminate()
+  })
+  sourceFuture.foreach(s => {
+    println(s"Source ${s.status}   ${s.count} bytes")
+    if (sinkFuture.isCompleted) frontend.terminate()
+  })
 }
