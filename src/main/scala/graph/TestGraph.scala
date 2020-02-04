@@ -12,7 +12,7 @@ import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
-object RunnableGraph extends App {
+object TestGraph extends App {
 
   val inputFile = Paths.get("~/test.txt")
   val outputFile = Paths.get("~/out_test.txt")
