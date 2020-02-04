@@ -3,10 +3,6 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.{Logging, LoggingAdapter}
 import com.typesafe.config._
 
-/**
- *  Required scala ver 2.11.8
- *           akka ver 2.4.9
- */
 object Frontend extends App {
   def remotingConfig() = ConfigFactory.parseString(
     s"""
