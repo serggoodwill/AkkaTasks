@@ -4,7 +4,7 @@ import java.nio.file.Paths
 import java.nio.file.StandardOpenOption.{APPEND, CREATE, WRITE}
 
 import akka.NotUsed
-import akka.stream.scaladsl.{Broadcast, FileIO, Flow, GraphDSL, Sink, Source}
+import akka.stream.scaladsl.{Broadcast, FileIO, Flow, Framing, GraphDSL, Sink, Source}
 import akka.stream.{FlowShape, Graph, IOResult}
 import akka.util.ByteString
 
@@ -12,24 +12,30 @@ import scala.concurrent.Future
 
 object EcoBikes extends App {
 
-  type FlowLike = Graph[FlowShape[String, ByteString], NotUsed]
+  type FlowLike = Graph[FlowShape[ByteString, ByteString], NotUsed]
 
   def processBikes(): FlowLike = {
-
+    val jsFlow = LogJson.jsonOutFlow
     Flow.fromGraph(
       GraphDSL.create() { implicit builder =>
         import GraphDSL.Implicits._
 
-        val bcast = builder.add(Broadcast[String](3))
-        val electric = Flow[String].filter(_.contains("E-BIKE"))
-        val folding = Flow[String].filter(_.contains("FOLDING BIKE"))
-        val speedelec = Flow[String].filter(_.contains("SPEEDELEC"))
+        val delimiterFlow: Flow[ByteString, ByteString, NotUsed] =
+          Framing
+            .delimiter(ByteString("\n"), 1024)
+            .map(_.decodeString("UTF8"))
+            .map(s => ByteString(s))
+        val bcast = builder.add(Broadcast[ByteString](3))
+        val js = builder.add(jsFlow)
+        val electric = Flow[ByteString].filter(_.contains("E-BIKE"))
+        val folding = Flow[ByteString].filter(_.contains("FOLDING BIKE"))
+        val speedelec = Flow[ByteString].filter(_.contains("SPEEDELEC"))
 
-        bcast ~> electric ~> sink1
+        source ~> delimiterFlow ~> bcast ~> electric ~> sink1
         bcast ~> folding ~> sink2
         bcast ~> speedelec ~> sink3
 
-        FlowShape(bcast.in, source.out)
+        FlowShape(bcast.in, js.out)
       }
     )
   }
