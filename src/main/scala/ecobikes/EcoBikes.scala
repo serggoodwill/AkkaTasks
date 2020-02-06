@@ -25,9 +25,9 @@ object EcoBikes extends App {
         val folding = Flow[String].filter(_.contains("FOLDING BIKE"))
         val speedelec = Flow[String].filter(_.contains("SPEEDELEC"))
 
-        bcast ~> electric
-        bcast ~> folding
-        bcast ~> speedelec
+        bcast ~> electric ~> sink1
+        bcast ~> folding ~> sink2
+        bcast ~> speedelec ~> sink3
 
         FlowShape(bcast.in, source.out)
       }
@@ -47,8 +47,5 @@ object EcoBikes extends App {
   val sink1: Sink[ByteString, Future[IOResult]] = FileIO.toPath(outputFile1, Set(CREATE, WRITE, APPEND))
   val sink2: Sink[ByteString, Future[IOResult]] = FileIO.toPath(outputFile2, Set(CREATE, WRITE, APPEND))
   val sink3: Sink[ByteString, Future[IOResult]] = FileIO.toPath(outputFile3, Set(CREATE, WRITE, APPEND))
-
-  class Bike
-
 }
 
