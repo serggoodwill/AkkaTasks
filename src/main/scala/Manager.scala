@@ -9,6 +9,7 @@ class Manager extends Actor {
     case Register(t) =>
       context.actorOf(Props[TimerActor], s"$t").forward(t)
   }
+
   override def preStart(): Unit = {
     super.preStart()
     log.info("PreStart: Manager " + self.toString() + " created.")

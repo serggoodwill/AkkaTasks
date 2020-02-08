@@ -1,7 +1,5 @@
 import GeneralActor.{Register, Timeout}
 import akka.actor.{Actor, ActorIdentity, ActorRef, ActorSelection, Identify}
-import GeneralActor.Timeout
-import akka.actor.{Actor, ActorIdentity, ActorRef, ActorSelection, Identify}
 import akka.event.{Logging, LoggingAdapter}
 
 import scala.collection.mutable
@@ -22,7 +20,7 @@ class GeneralActor extends Actor {
 
   override def receive: Receive = {
     case "Start" =>
-      val selection: ActorSelection = context.actorSelection("akka.tcp://backend@192.168.2.175:2552/user/*")
+      val selection: ActorSelection = context.actorSelection("akka.tcp://backend@0.0.0.0:2552/user/*")
       selection ! Identify(0)
       remoteActors.empty
       log.info("GeneralActor is started")
@@ -39,7 +37,7 @@ class GeneralActor extends Actor {
     case Timeout(t, ref) => log.info(s"$ref got timeout $t")
   }
 
-  def forward = {
+  def forward(): Unit = {
 
   }
 

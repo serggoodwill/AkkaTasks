@@ -3,20 +3,22 @@ import akka.event.{Logging, LoggingAdapter}
 import com.typesafe.config._
 
 object Backend extends App {
-  val conf: String =
+  def conf(ip: String, port: Int): String =
     s"""
-akka {
-actor.provider = "akka.remote.RemoteActorRefProvider"
-remote {
-enabled-transports = ["akka.remote.netty.tcp"]
-netty.tcp {
-hostname = "192.168.2.175"
-port = 2552
-}
-}
-}
-"""
-  val config = ConfigFactory.parseString(conf)
+      akka {
+          actor.provider = remote
+          remote.artery.enabled = false
+          remote.classic {
+            enabled-transports = ["akka.remote.classic.netty.tcp"]
+            netty.tcp {
+              hostname = "$ip"
+              port = $port
+            }
+          }
+      }
+    """
+
+  val config = ConfigFactory.parseString(conf("0.0.0.0", 2552))
   val backend: ActorSystem = ActorSystem("backend", config)
   val log: LoggingAdapter = Logging(backend.eventStream, "backend-manager")
   val manager1 = backend.actorOf(Props[Manager], "manager1")

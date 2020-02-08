@@ -1,16 +1,16 @@
 package ecobikes
 
 import java.nio.file.Paths
-import java.nio.file.StandardOpenOption.{APPEND, CREATE, WRITE}
+import java.nio.file.StandardOpenOption._
 
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.javadsl.RunnableGraph
 import akka.stream.scaladsl.{Broadcast, FileIO, Flow, Framing, GraphDSL, Sink, Source}
-import akka.stream.{ActorMaterializer, ClosedShape, IOResult}
+import akka.stream.{ClosedShape, IOResult}
 import akka.util.ByteString
 
-import scala.concurrent.{ExecutionContextExecutor, Future}
+import scala.concurrent.Future
 
 object EcoBikesAlt extends App {
 
@@ -19,7 +19,7 @@ object EcoBikesAlt extends App {
   val g = RunnableGraph.fromGraph(GraphDSL.create() { implicit builder =>
     import GraphDSL.Implicits._
 
-    def sinkBike(bikeType: String): Sink[ByteString, Future[IOResult]] = FileIO.toPath(Paths.get(s"out_$bikeType.txt"), Set(CREATE, WRITE, APPEND))
+    def sinkBike(bikeType: String): Sink[ByteString, Future[IOResult]] = FileIO.toPath(Paths.get(s"out_$bikeType.txt"), Set(CREATE, WRITE, TRUNCATE_EXISTING))
 
     val frame: Flow[ByteString, String, NotUsed] = Framing.delimiter(ByteString("\n"), 1024).map(_.decodeString("UTF8"))
     val bsFlow: Flow[String, ByteString, NotUsed] = Flow[String].map(s => ByteString(s))
@@ -30,12 +30,10 @@ object EcoBikesAlt extends App {
     val speedelec = Flow[String].filter(_.contains("SPEEDELEC"))
 
     source ~> frame ~> bcast ~> electric ~> format ~> bsFlow ~> sinkBike("E-BIKE")
-                      bcast ~> folding ~> format ~> bsFlow ~> sinkBike("FOLDING")
-                      bcast ~> speedelec ~> format ~> bsFlow ~> sinkBike("SPEEDELEC")
+    bcast ~> folding ~> format ~> bsFlow ~> sinkBike("FOLDING")
+    bcast ~> speedelec ~> format ~> bsFlow ~> sinkBike("SPEEDELEC")
     ClosedShape
   })
   implicit val system: ActorSystem = ActorSystem()
-  implicit val ec: ExecutionContextExecutor = system.dispatcher
-  implicit val materializer: ActorMaterializer = ActorMaterializer()
-  g.run(materializer)
+  g.run(system)
 }

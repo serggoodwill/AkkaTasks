@@ -1,15 +1,15 @@
 package ecobikes
 
 import java.nio.file.Paths
-import java.nio.file.StandardOpenOption.{APPEND, CREATE, WRITE}
+import java.nio.file.StandardOpenOption._
 
 import akka.NotUsed
 import akka.actor.ActorSystem
+import akka.stream._
 import akka.stream.scaladsl.{Broadcast, FileIO, Flow, Framing, GraphDSL, Keep, Sink, Source}
-import akka.stream.{ActorMaterializer, FlowShape, Graph, IOResult}
 import akka.util.ByteString
 
-import scala.concurrent.{ExecutionContextExecutor, Future}
+import scala.concurrent.Future
 
 object EcoBikes extends App {
 
@@ -43,7 +43,7 @@ object EcoBikes extends App {
   }
 
 
-  val inputFile = Paths.get("/home/goodwill/Downloads/akka/ecobike.txt")
+  val inputFile = Paths.get("ecobike.txt")
 
   val source: Source[ByteString, Future[IOResult]] = FileIO.fromPath(inputFile)
 
@@ -53,14 +53,12 @@ object EcoBikes extends App {
       .map(_.decodeString("UTF8"))
 
   def sinkBike(bikeType: String): Sink[ByteString, Future[IOResult]] =
-    FileIO.toPath(Paths.get(s"/home/goodwill/Downloads/akka/out_$bikeType.txt"), Set(CREATE, WRITE, APPEND))
+    FileIO.toPath(Paths.get(s"out_$bikeType.txt"), Set(CREATE, WRITE, TRUNCATE_EXISTING))
 
   val outputFile: Sink[ByteString, Future[IOResult]] =
-    FileIO.toPath(Paths.get("/home/goodwill/Downloads/akka/out_full.txt"), Set(CREATE, WRITE, APPEND))
+    FileIO.toPath(Paths.get("out_full.txt"), Set(CREATE, WRITE, TRUNCATE_EXISTING))
 
   implicit val system: ActorSystem = ActorSystem()
-  implicit val ec: ExecutionContextExecutor = system.dispatcher
-  implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   source
     .via(frame)
