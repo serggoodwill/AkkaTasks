@@ -1,6 +1,8 @@
-import GeneralActor.Timeout
+package simple_remote_system
+
 import akka.actor.Actor
 import akka.event.{Logging, LoggingAdapter}
+import simple_remote_system.GeneralActor.Timeout
 
 class TimerActor extends Actor {
   val log: LoggingAdapter = Logging(context.system, this)

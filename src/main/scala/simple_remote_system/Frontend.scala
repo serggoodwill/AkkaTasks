@@ -1,17 +1,19 @@
-import Backend.conf
-import GeneralActor.Register
+package simple_remote_system
+
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.{Logging, LoggingAdapter}
-import com.typesafe.config._
+import com.typesafe.config.ConfigFactory
+import simple_remote_system.GeneralActor.Register
 
 object Frontend extends App {
   def conf(ip: String, port: Int): String =
     s"""
       akka {
-          actor.provider = remote
-          remote.artery.enabled = false
-          remote.classic {
-            enabled-transports = ["akka.remote.classic.netty.tcp"]
+          actor {
+            provider = remote
+          }
+          remote {
+            enabled-transports = ["akka.remote.netty.tcp"]
             netty.tcp {
               hostname = "$ip"
               port = $port

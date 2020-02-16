@@ -7,7 +7,7 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.javadsl.RunnableGraph
 import akka.stream.scaladsl.{Broadcast, FileIO, Flow, Framing, GraphDSL, Sink, Source}
-import akka.stream.{ClosedShape, IOResult}
+import akka.stream.{ActorMaterializer, ClosedShape, IOResult}
 import akka.util.ByteString
 
 import scala.concurrent.Future
@@ -35,5 +35,7 @@ object EcoBikesAlt extends App {
     ClosedShape
   })
   implicit val system: ActorSystem = ActorSystem()
-  g.run(system)
+  implicit val materializer: ActorMaterializer = ActorMaterializer()
+
+  g.run(materializer)
 }

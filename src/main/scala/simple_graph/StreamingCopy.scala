@@ -1,11 +1,11 @@
-package graph
+package simple_graph
 
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption._
 
 import akka.NotUsed
 import akka.actor.ActorSystem
-import akka.stream.IOResult
+import akka.stream.{ActorMaterializer, IOResult}
 import akka.stream.scaladsl.{FileIO, Flow, Framing, Keep, RunnableGraph, Sink, Source}
 import akka.util.ByteString
 
@@ -26,6 +26,7 @@ object StreamingCopy extends App {
 
 
   implicit val actorSystem: ActorSystem = ActorSystem()
+  implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val ec: ExecutionContextExecutor = actorSystem.dispatcher
 
   //    ----------------------------  Keep.left

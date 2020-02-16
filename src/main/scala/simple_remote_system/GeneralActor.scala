@@ -1,6 +1,8 @@
-import GeneralActor.{Register, Timeout}
+package simple_remote_system
+
 import akka.actor.{Actor, ActorIdentity, ActorRef, ActorSelection, Identify}
 import akka.event.{Logging, LoggingAdapter}
+import simple_remote_system.GeneralActor.{Register, Timeout}
 
 import scala.collection.mutable
 
@@ -23,7 +25,7 @@ class GeneralActor extends Actor {
       val selection: ActorSelection = context.actorSelection("akka.tcp://backend@0.0.0.0:2552/user/*")
       selection ! Identify(0)
       remoteActors.empty
-      log.info("GeneralActor is started")
+      log.info("simple_remote_system.GeneralActor is started")
     case ActorIdentity(0, Some(ref)) =>
       remoteActors.add(ref)
       log.info(ref.toString() + " got")

@@ -1,6 +1,8 @@
-import GeneralActor.Register
+package simple_remote_system
+
 import akka.actor.{Actor, Props}
 import akka.event.{Logging, LoggingAdapter}
+import simple_remote_system.GeneralActor.Register
 
 class Manager extends Actor {
   val log: LoggingAdapter = Logging(context.system, this)
@@ -12,6 +14,6 @@ class Manager extends Actor {
 
   override def preStart(): Unit = {
     super.preStart()
-    log.info("PreStart: Manager " + self.toString() + " created.")
+    log.info("PreStart: simple_remote_system.Manager " + self.toString() + " created.")
   }
 }

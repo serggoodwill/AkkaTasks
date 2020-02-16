@@ -59,6 +59,7 @@ object EcoBikes extends App {
     FileIO.toPath(Paths.get("out_full.txt"), Set(CREATE, WRITE, TRUNCATE_EXISTING))
 
   implicit val system: ActorSystem = ActorSystem()
+  implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   source
     .via(frame)
